@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
 using TNC_API.DTO.Input;
 using TNC_API.Interfaces;
 
@@ -6,6 +7,7 @@ namespace TNC_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [EnableCors("AllowOrigin")]
     public class LoginController : Controller
     {   
         public readonly ILogin _login;
