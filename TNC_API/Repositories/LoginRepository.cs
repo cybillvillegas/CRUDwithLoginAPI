@@ -27,8 +27,8 @@ namespace TNC_API.Repositories
 
         public string AuthenticateUser(LoginRequestDTO login)
         {
-            int numberofSalt = Convert.ToInt32(Constants.saltiness);
-            int numberofiterations = Convert.ToInt32(Constants.nIterations);
+            int numberofSalt = Convert.ToInt32(Constants.Saltiness);
+            int numberofiterations = Convert.ToInt32(Constants.NIterations);
             string AccessToken = "";
 
             if (login != null)

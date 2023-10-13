@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Security;
 using TNC_API.Data;
 using TNC_API.Interfaces;
 using TNC_API.Repositories;
@@ -7,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IUser, UserRepository>();
 builder.Services.AddScoped<ILogin, LoginRepository>();
+builder.Services.AddScoped<IPettyCashRequest, PettyCashRequestRepository>();
 
 // Add services to the container.
 

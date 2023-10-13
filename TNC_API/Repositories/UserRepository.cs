@@ -29,9 +29,9 @@ namespace TNC_API.Repositories
                 {
                     try
                     {
-                        int numberofSalt = Convert.ToInt32(Constants.saltiness);
-                        int numberofiterations = Convert.ToInt32(Constants.nIterations);
-                        var Salt = SecurityHelper.GenerateSalt(Constants.saltiness);
+                        int numberofSalt = Convert.ToInt32(Constants.Saltiness);
+                        int numberofiterations = Convert.ToInt32(Constants.NIterations);
+                        var Salt = SecurityHelper.GenerateSalt(Constants.Saltiness);
                         var HashedPassword = SecurityHelper.HashPassword("12345678", Salt, numberofiterations, numberofSalt);
 
                         var newUser = new User
@@ -65,15 +65,14 @@ namespace TNC_API.Repositories
                     {
                         return false;
                     }
-                } else
+                }
+                else
                 {
                     return false;
-                }                
+                }
             }
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
 
         public async Task<bool> DeleteUser(int id)
@@ -119,7 +118,7 @@ namespace TNC_API.Repositories
 
         public async Task<List<UserResponseDTO>> GetUsers()
         {
-            var users =  await _context.Users.ToListAsync(); 
+            var users = await _context.Users.ToListAsync();
             var usersList = new List<UserResponseDTO>();
 
             if (users != null)
@@ -143,7 +142,8 @@ namespace TNC_API.Repositories
                 }
 
                 return usersList;
-            } else
+            }
+            else
             {
                 return null;
             }
@@ -171,9 +171,9 @@ namespace TNC_API.Repositories
                 // Find the user in the database by their ID
                 var user = await _context.Users.FindAsync(userId);
 
-                int numberofSalt = Convert.ToInt32(Constants.saltiness);
-                int numberofiterations = Convert.ToInt32(Constants.nIterations);
-                var Salt = SecurityHelper.GenerateSalt(Constants.saltiness);
+                int numberofSalt = Convert.ToInt32(Constants.Saltiness);
+                int numberofiterations = Convert.ToInt32(Constants.NIterations);
+                var Salt = SecurityHelper.GenerateSalt(Constants.Saltiness);
                 var HashedPassword = SecurityHelper.HashPassword(userUpdate.Password, Salt, numberofiterations, numberofSalt);
 
                 if (user != null)
@@ -194,11 +194,8 @@ namespace TNC_API.Repositories
 
                     return true; // User update was successful
                 }
-                else
-                {
-                    // User with the given ID was not found
-                    return false;
-                }
+
+                return false;
             }
             catch (Exception ex)
             {

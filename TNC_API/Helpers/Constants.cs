@@ -2,7 +2,7 @@
 {
     public class Constants
     {
-        public static int saltiness = 619;
-        public static int nIterations = 110011;
+        public static int Saltiness = 619;
+        public static int NIterations = 110011;
     }
 }
