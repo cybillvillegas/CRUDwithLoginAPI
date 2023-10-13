@@ -1,8 +1,7 @@
-﻿namespace TNC_API.DTO.Input
+﻿namespace TNC_API.DTO.Output
 {
-    public class PCRLRequestDTO
+    public class PCRLResponseDTO
     {
-        public int DetailId { get; set; }
         public string Item { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public float Quantity { get; set; }

@@ -42,9 +42,18 @@ namespace TNC_API.Repositories
             return false;
         }
 
-        public Task<bool> DeletePettyCashRequest(int id)
+        public async Task<bool> DeletePettyCashRequest(int id)
         {
-            throw new NotImplementedException();
+            var requestToDelete = await _context.PCRs.FindAsync(id);
+
+            if (requestToDelete != null)
+            {
+                _context.PCRs.Remove(requestToDelete);
+                await _context.SaveChangesAsync();
+                return true; // Request was found and deleted
+            }
+
+            return false;
         }
 
         public async Task<PCRResponseDTO> GetPettyCashRequest(int id)
