@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\TNC_API",
+    "\\TNC_API\\DTO",
+    "\\TNC_API\\DTO\\Input",
+    "\\TNC_API\\Interfaces",
+    "\\TNC_API\\Models",
+    "\\TNC_API\\Repositories"
+  ],
+  "PreviewInSolutionExplorer": false
+}
