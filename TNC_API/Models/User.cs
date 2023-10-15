@@ -20,6 +20,6 @@ namespace TNC_API.Models
         public bool IsPasswordChanged { get; set; }
         public int Status { get; set; }
         public DateTime Created { get; set; }
-        public DateTime LastLoggedIn { get; set; }
+        public DateTime? LastLoggedIn { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Net;
 using TNC_API.Data;
 using TNC_API.DTO.Input;
@@ -12,63 +13,70 @@ namespace TNC_API.Repositories
     {
         private readonly DatabaseContext _context;
 
-        public async Task<bool> CreatePettyCashRequestList(List<PCRLRequestDTO> pcrLists, int PCRID)
+        public async Task<bool> CreatePettyCashRequestList(List<PCRLRequestDTO> pcrLists, int pcdId)
         {
-            if (pcrLists != null)
+            try
             {
-                try
+                if (pcrLists != null)
                 {
                     foreach (PCRLRequestDTO pcr in pcrLists)
                     {
                         var pcrList = new PCRL
                         {
-                            PCRID = PCRID,
+                            PCRID = pcdId,
                             Item = pcr.Item,
                             Description = pcr.Description,
                             Quantity = pcr.Quantity,
-                            Price = pcr.Price
+                            Price = pcr.Price,
+                            IsIncluded = 1
                         };
 
                         _context.PCRLs.Add(pcrList);
                     }
 
                     await _context.SaveChangesAsync();
-                } 
-                catch (Exception ex)
-                {
-                    return false;
                 }
 
                 return true;
             }
-
-            return false;
+            catch (Exception ex)
+            {
+                return false;
+            }
         }
 
         public async Task<List<PCRLResponseDTO>> GetPettyCashRequestList(int id)
         {
-            var pcrLists = await _context.PCRLs
-                .Where(x => x.PCRID == id)
-                .Select(x => new PCRLResponseDTO
-                {
-                    Item = x.Item,
-                    Description = x.Description,
-                    Price = x.Price,
-                    Quantity = x.Quantity
-                })
-                .ToListAsync();
+            try
+            {
+                var pcrLists = await _context.PCRLs
+                    .Where(x => x.PCRID == id)
+                    .Select(x => new PCRLResponseDTO
+                    {
+                        Item = x.Item,
+                        Description = x.Description,
+                        Price = x.Price,
+                        Quantity = x.Quantity
+                    })
+                    .ToListAsync();
 
-            return pcrLists;
+                return pcrLists;
+            }
+            catch (Exception ex)
+            {
+                return null; // Or return null
+            }
         }
 
-        public async Task<bool> DeletePettyCashRequestLists(int id)
+        public async Task<bool> DeletePettyCashRequestList(int id)
         {
             var pcrDetail = await _context.PCRLs.FindAsync(id);
-           
+
             if (pcrDetail != null)
             {
                 _context.PCRLs.Remove(pcrDetail);
                 await _context.SaveChangesAsync();
+
                 return true;
             }
 

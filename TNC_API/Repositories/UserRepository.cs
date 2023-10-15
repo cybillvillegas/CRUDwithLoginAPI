@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.OpenApi.Validations.Rules;
 using System.Data;
 using TNC_API.Data;
@@ -15,58 +16,51 @@ namespace TNC_API.Repositories
     public class UserRepository : IUser
     {
         private readonly DatabaseContext _context;
+        private readonly int _numberOfSalt;
+        private readonly int _numberOfIterations;
+        private readonly string _defaultPassword;
 
-        public UserRepository(DatabaseContext context)
+        public UserRepository(DatabaseContext context, SecuritySettings securitySettings)
         {
             _context = context;
+            _numberOfSalt = securitySettings.NumberOfSalt;
+            _numberOfIterations = securitySettings.NumberOfIterations;
+            _defaultPassword = securitySettings.DefaultPassword;
         }
 
         public async Task<bool> CreateUser(UserRequestDTO user)
         {
             if (user != null)
             {
-                if (user.Password == user.ConfirmPassword)
+                try
                 {
-                    try
+                    (string Salt, string Hash) = GenerateSaltAndHashForPassword(_defaultPassword);
+
+                    var newUser = new User
                     {
-                        int numberofSalt = Convert.ToInt32(Constants.Saltiness);
-                        int numberofiterations = Convert.ToInt32(Constants.NIterations);
-                        var Salt = SecurityHelper.GenerateSalt(Constants.Saltiness);
-                        var HashedPassword = SecurityHelper.HashPassword("12345678", Salt, numberofiterations, numberofSalt);
+                        First_Name = user.First_Name,
+                        Last_Name = user.Last_Name,
+                        Middle_Name = user.Middle_Name,
+                        Suffix = user.Suffix,
+                        Contact = user.Contact,
+                        Email = user.Email,
+                        Username = user.Username,
+                        UserRole = user.UserRole,
+                        IsLoggedIn = false,
+                        IsPasswordChanged = false,
+                        Salt = Salt,
+                        Hash = Hash,
+                        Status = 1,
+                        Created = DateTime.Now,
+                    };
 
-                        var newUser = new User
-                        {
-                            First_Name = user.First_Name,
-                            Last_Name = user.Last_Name,
-                            Middle_Name = user.Middle_Name,
-                            Suffix = user.Suffix,
-                            Contact = user.Contact,
-                            Email = user.Email,
-                            Username = user.Username,
-                            UserRole = user.UserRole,
-                            IsLoggedIn = false,
-                            IsPasswordChanged = false,
-                            Salt = Salt,
-                            Hash = HashedPassword,
-                            Status = 1,
-                            Created = DateTime.Now,
-                            LastLoggedIn = DateTime.Now
-                        };
+                    _context.Users.Add(newUser);
 
-                        // Add the new user to the context
-                        _context.Users.Add(newUser);
+                    await _context.SaveChangesAsync();
 
-                        // Save changes to the database
-                        await _context.SaveChangesAsync();
-
-                        return true; // User creation was successful
-                    }
-                    catch (Exception ex)
-                    {
-                        return false;
-                    }
+                    return true;
                 }
-                else
+                catch (Exception ex)
                 {
                     return false;
                 }
@@ -77,53 +71,34 @@ namespace TNC_API.Repositories
 
         public async Task<bool> DeleteUser(int id)
         {
-            var userToDelete = await _context.Users.FindAsync(id);
-
-            if (userToDelete != null)
+            try
             {
-                _context.Users.Remove(userToDelete);
-                await _context.SaveChangesAsync();
-                return true; // User was found and deleted
-            }
+                var userToDelete = await _context.Users.FindAsync(id);
 
-            return false; // User was not found
+                if (userToDelete != null)
+                {
+                    _context.Users.Remove(userToDelete);
+                    await _context.SaveChangesAsync();
+                    return true;
+                }
+                else
+                {
+                    return false; // User with the specified ID was not found.
+                }
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public async Task<UserResponseDTO> GetUser(int id)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id);
-
-            if (user != null)
+            try
             {
-                var userResponseDTO = new UserResponseDTO
-                {
-                    Id = user.Id,
-                    First_Name = user.First_Name,
-                    Last_Name = user.Last_Name,
-                    Middle_Name = user.Middle_Name,
-                    Suffix = user.Suffix,
-                    Contact = user.Contact,
-                    Email = user.Email,
-                    Username = user.Username,
-                    Created = user.Created
-                };
+                var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id);
 
-                return userResponseDTO;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public async Task<List<UserResponseDTO>> GetUsers()
-        {
-            var users = await _context.Users.ToListAsync();
-            var usersList = new List<UserResponseDTO>();
-
-            if (users != null)
-            {
-                foreach (var user in users)
+                if (user != null)
                 {
                     var userResponseDTO = new UserResponseDTO
                     {
@@ -138,25 +113,115 @@ namespace TNC_API.Repositories
                         Created = user.Created
                     };
 
-                    usersList.Add(userResponseDTO);
+                    return userResponseDTO;
                 }
-
-                return usersList;
+                else
+                {
+                    return null;
+                }
             }
-            else
+            catch
             {
                 return null;
             }
         }
 
+        public async Task<List<UserResponseDTO>> GetUsers()
+        {
+            var users = await _context.Users.ToListAsync();
+            var usersList = new List<UserResponseDTO>();
+
+            if (users == null)
+            {
+                return null;
+            }
+
+            foreach (var user in users)
+            {
+                var userResponseDTO = new UserResponseDTO
+                {
+                    Id = user.Id,
+                    First_Name = user.First_Name,
+                    Last_Name = user.Last_Name,
+                    Middle_Name = user.Middle_Name,
+                    Suffix = user.Suffix,
+                    Contact = user.Contact,
+                    Email = user.Email,
+                    Username = user.Username,
+                    Created = user.Created
+                };
+
+                usersList.Add(userResponseDTO);
+            }
+
+            return usersList;
+        }
+
+
         public async Task<bool> UpdateUserStatus(int id, int status)
         {
-            var userToUpdate = await _context.Users.FirstOrDefaultAsync(x => x.Id == id);
-
-            if (userToUpdate != null)
+            try
             {
-                userToUpdate.Status = status;
-                await _context.SaveChangesAsync();
+                var userToUpdate = await _context.Users.FirstOrDefaultAsync(x => x.Id == id);
+
+                if (userToUpdate != null)
+                {
+                    userToUpdate.Status = status;
+                    await _context.SaveChangesAsync();
+
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateUser(int userId, UserRequestDTO userUpdate)
+        {
+            try
+            {
+                var user = new User { Id = userId };
+
+                if (user != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(userUpdate.Password))
+                    {
+                        UpdatePassword(user, userUpdate.Password);
+                    }
+                    else if (!string.IsNullOrWhiteSpace(userUpdate.Status.ToString()))
+                    {
+                        user.Status = userUpdate.Status;
+                    } 
+                    else
+                    {
+                        UpdateUserInfo(user, userUpdate);
+                    }
+
+                    _context.Users.Update(user);
+                    await _context.SaveChangesAsync();
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        private bool UpdatePassword(User user, string newPassword)
+        {
+            if (user.Hash != SecurityHelper.HashPassword(newPassword, user.Salt, _numberOfIterations, _numberOfSalt)) // Checks if old Hash is equal to new Hash
+            {
+                (string Salt, string Hash) = GenerateSaltAndHashForPassword(newPassword);
+                user.Salt = Salt;
+                user.Hash = Hash;
 
                 return true;
             }
@@ -164,44 +229,23 @@ namespace TNC_API.Repositories
             return false;
         }
 
-        public async Task<bool> UpdateUser(int userId, UserRequestDTO userUpdate)
+        private (string Salt, string Hash) GenerateSaltAndHashForPassword(string password)
         {
-            try
-            {
-                // Find the user in the database by their ID
-                var user = await _context.Users.FindAsync(userId);
+            var salt = SecurityHelper.GenerateSalt(_numberOfSalt);
+            var hash = SecurityHelper.HashPassword(password, salt, _numberOfIterations, _numberOfSalt);
+            return (salt, hash);
+        }
 
-                int numberofSalt = Convert.ToInt32(Constants.Saltiness);
-                int numberofiterations = Convert.ToInt32(Constants.NIterations);
-                var Salt = SecurityHelper.GenerateSalt(Constants.Saltiness);
-                var HashedPassword = SecurityHelper.HashPassword(userUpdate.Password, Salt, numberofiterations, numberofSalt);
-
-                if (user != null)
-                {
-                    // Update user properties with data from the updatedUserData DTO
-                    user.First_Name = userUpdate.First_Name;
-                    user.Last_Name = userUpdate.Last_Name;
-                    user.Middle_Name = userUpdate.Middle_Name;
-                    user.Suffix = userUpdate.Suffix;
-                    user.Contact = userUpdate.Contact;
-                    user.Email = userUpdate.Email;
-                    user.Username = userUpdate.Username;
-                    user.Hash = HashedPassword;
-                    user.Salt = Salt;
-
-                    // Save changes to the database
-                    await _context.SaveChangesAsync();
-
-                    return true; // User update was successful
-                }
-
-                return false;
-            }
-            catch (Exception ex)
-            {
-                // Handle exceptions, log errors, etc.
-                return false;
-            }
+        private static void UpdateUserInfo(User user, UserRequestDTO userUpdate)
+        {
+            user.First_Name = userUpdate.First_Name;
+            user.Last_Name = userUpdate.Last_Name;
+            user.Middle_Name = userUpdate.Middle_Name;
+            user.Suffix = userUpdate.Suffix;
+            user.Contact = userUpdate.Contact;
+            user.Email = userUpdate.Email;
+            user.Username = userUpdate.Username;
+            user.Status = userUpdate.Status;
         }
     }
 }
