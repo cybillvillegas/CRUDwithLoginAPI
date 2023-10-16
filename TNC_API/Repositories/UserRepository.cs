@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -19,13 +20,15 @@ namespace TNC_API.Repositories
         private readonly int _numberOfSalt;
         private readonly int _numberOfIterations;
         private readonly string _defaultPassword;
+        private readonly IMapper _mapper;
 
-        public UserRepository(DatabaseContext context, SecuritySettings securitySettings)
+        public UserRepository(DatabaseContext context, SecuritySettings securitySettings, IMapper mapper)
         {
             _context = context;
             _numberOfSalt = securitySettings.NumberOfSalt;
             _numberOfIterations = securitySettings.NumberOfIterations;
             _defaultPassword = securitySettings.DefaultPassword;
+            _mapper = mapper;
         }
 
         public async Task<bool> CreateUser(UserRequestDTO user)
@@ -36,25 +39,15 @@ namespace TNC_API.Repositories
                 {
                     (string Salt, string Hash) = GenerateSaltAndHashForPassword(_defaultPassword);
 
-                    var newUser = new User
-                    {
-                        First_Name = user.First_Name,
-                        Last_Name = user.Last_Name,
-                        Middle_Name = user.Middle_Name,
-                        Suffix = user.Suffix,
-                        Contact = user.Contact,
-                        Email = user.Email,
-                        Username = user.Username,
-                        UserRole = user.UserRole,
-                        IsLoggedIn = false,
-                        IsPasswordChanged = false,
-                        Salt = Salt,
-                        Hash = Hash,
-                        Status = 1,
-                        Created = DateTime.Now,
-                    };
+                    var newUser = _mapper.Map<User>(user);
+                    newUser.IsLoggedIn = false;
+                    newUser.IsPasswordChanged = false;
+                    newUser.Salt = Salt;
+                    newUser.Hash = Hash;
+                    newUser.Status = 1;
+                    newUser.Created = DateTime.Now;
 
-                    _context.Users.Add(newUser);
+                    await _context.Users.AddAsync(newUser);
 
                     await _context.SaveChangesAsync();
 
@@ -83,7 +76,7 @@ namespace TNC_API.Repositories
                 }
                 else
                 {
-                    return false; // User with the specified ID was not found.
+                    return false;
                 }
             }
             catch
@@ -96,22 +89,11 @@ namespace TNC_API.Repositories
         {
             try
             {
-                var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id);
+                var user = await _context.Users.FindAsync(id);
 
                 if (user != null)
                 {
-                    var userResponseDTO = new UserResponseDTO
-                    {
-                        Id = user.Id,
-                        First_Name = user.First_Name,
-                        Last_Name = user.Last_Name,
-                        Middle_Name = user.Middle_Name,
-                        Suffix = user.Suffix,
-                        Contact = user.Contact,
-                        Email = user.Email,
-                        Username = user.Username,
-                        Created = user.Created
-                    };
+                    var userResponseDTO = _mapper.Map<UserResponseDTO>(user);
 
                     return userResponseDTO;
                 }
@@ -138,48 +120,12 @@ namespace TNC_API.Repositories
 
             foreach (var user in users)
             {
-                var userResponseDTO = new UserResponseDTO
-                {
-                    Id = user.Id,
-                    First_Name = user.First_Name,
-                    Last_Name = user.Last_Name,
-                    Middle_Name = user.Middle_Name,
-                    Suffix = user.Suffix,
-                    Contact = user.Contact,
-                    Email = user.Email,
-                    Username = user.Username,
-                    Created = user.Created
-                };
+                var userResponseDTO = _mapper.Map<UserResponseDTO>(user);
 
                 usersList.Add(userResponseDTO);
             }
 
             return usersList;
-        }
-
-
-        public async Task<bool> UpdateUserStatus(int id, int status)
-        {
-            try
-            {
-                var userToUpdate = await _context.Users.FirstOrDefaultAsync(x => x.Id == id);
-
-                if (userToUpdate != null)
-                {
-                    userToUpdate.Status = status;
-                    await _context.SaveChangesAsync();
-
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            catch
-            {
-                return false;
-            }
         }
 
         public async Task<bool> UpdateUser(int userId, UserRequestDTO userUpdate)
@@ -190,7 +136,8 @@ namespace TNC_API.Repositories
 
                 if (user != null)
                 {
-                    if (!string.IsNullOrWhiteSpace(userUpdate.Password))
+                    if (!(string.IsNullOrWhiteSpace(userUpdate.Password) || string.IsNullOrWhiteSpace(userUpdate.ConfirmPassword)) 
+                        && (userUpdate.Password == userUpdate.ConfirmPassword))
                     {
                         UpdatePassword(user, userUpdate.Password);
                     }
@@ -200,7 +147,7 @@ namespace TNC_API.Repositories
                     } 
                     else
                     {
-                        UpdateUserInfo(user, userUpdate);
+                        _mapper.Map(user, userUpdate);
                     }
 
                     _context.Users.Update(user);
@@ -234,18 +181,6 @@ namespace TNC_API.Repositories
             var salt = SecurityHelper.GenerateSalt(_numberOfSalt);
             var hash = SecurityHelper.HashPassword(password, salt, _numberOfIterations, _numberOfSalt);
             return (salt, hash);
-        }
-
-        private static void UpdateUserInfo(User user, UserRequestDTO userUpdate)
-        {
-            user.First_Name = userUpdate.First_Name;
-            user.Last_Name = userUpdate.Last_Name;
-            user.Middle_Name = userUpdate.Middle_Name;
-            user.Suffix = userUpdate.Suffix;
-            user.Contact = userUpdate.Contact;
-            user.Email = userUpdate.Email;
-            user.Username = userUpdate.Username;
-            user.Status = userUpdate.Status;
         }
     }
 }

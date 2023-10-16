@@ -11,6 +11,5 @@ namespace TNC_API.Interfaces
         public Task<bool> CreateUser(UserRequestDTO user);
         public Task<bool> UpdateUser(int userId, UserRequestDTO user);
         public Task<bool> DeleteUser(int id);
-        public Task<bool> UpdateUserStatus(int id, int status);
     }
 }

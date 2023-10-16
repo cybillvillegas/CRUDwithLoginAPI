@@ -5,10 +5,21 @@ using TNC_API.Data;
 using TNC_API.Interfaces;
 using TNC_API.Models;
 using TNC_API.Repositories;
+using AutoMapper;
+using TNC_API.Profiles;
+
+var mapperConfig = new MapperConfiguration(cfg =>
+{
+    cfg.AddProfile<AutoMapperProfile>(); // Replace with the name of your AutoMapper profile class
+});
+
+var mapper = new Mapper(mapperConfig);
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddSingleton<IMapper>(mapper);
 builder.Services.AddScoped<DatabaseContext>();
+builder.Services.AddScoped<SecuritySettings>();
 builder.Services.AddScoped<IUser, UserRepository>();
 builder.Services.AddScoped<ILogin, LoginRepository>();
 builder.Services.AddScoped<IPettyCashRequest, PettyCashRequestRepository>();

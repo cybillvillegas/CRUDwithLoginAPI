@@ -51,6 +51,19 @@ namespace TNC_API.Controllers
             return BadRequest();
         }
 
+        [HttpGet]
+        [Route("GetUser")]
+        public async Task<ActionResult> GetUser(int id)
+        {
+            var user = await _user.GetUser(id);
+            if (user != null)
+            {
+                return Ok(user);
+            }
+
+            return BadRequest();
+        }
+
         [HttpPut]
         [Route("UpdateUser")]
         public async Task<ActionResult> UpdateUser(int Id, UserRequestDTO user)
@@ -71,7 +84,12 @@ namespace TNC_API.Controllers
         [Route("UpdateStatus")]
         public async Task<ActionResult> UpdateUserStatus(int Id, int status)
         {
-            var result = await _user.UpdateUserStatus(Id, status);
+            var user = new UserRequestDTO
+            {
+                Status = status
+            };
+
+            var result = await _user.UpdateUser(Id, user);
 
             if (result)
             {

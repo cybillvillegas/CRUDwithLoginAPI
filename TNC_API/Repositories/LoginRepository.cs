@@ -18,17 +18,22 @@ namespace TNC_API.Repositories
     {
         private readonly DatabaseContext _context;
         private readonly IConfiguration _configuration;
+        private readonly int _numberOfSalt;
+        private readonly int _numberOfIterations;
+        private readonly string _defaultPassword;
 
-        public LoginRepository(DatabaseContext context, IConfiguration configuration)
+        public LoginRepository(DatabaseContext context, IConfiguration configuration, SecuritySettings securitySettings)
         {
             _context = context;
-            _configuration = configuration;   
+            _configuration = configuration;
+            _numberOfSalt = securitySettings.NumberOfSalt;
+            _numberOfIterations = securitySettings.NumberOfIterations;
         }
 
         public string AuthenticateUser(LoginRequestDTO login)
         {
-            int numberofSalt = Convert.ToInt32(Constants.Saltiness);
-            int numberofiterations = Convert.ToInt32(Constants.NIterations);
+            int numberofSalt = Convert.ToInt32(_numberOfSalt);
+            int numberofiterations = Convert.ToInt32(_numberOfIterations);
             string AccessToken = "";
 
             if (login != null)

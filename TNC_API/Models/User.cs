@@ -12,8 +12,8 @@ namespace TNC_API.Models
         public string Suffix { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Contact { get; set; } = string.Empty;
-        public int UserRole { get; set; }
         public string Username { get; set; } = string.Empty;
+        public int UserRole { get; set; }
         public string Hash { get; set; } = string.Empty;
         public string Salt { get; set; } = string.Empty;
         public bool IsLoggedIn { get; set; }
