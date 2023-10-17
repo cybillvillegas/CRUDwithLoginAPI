@@ -18,7 +18,7 @@ namespace TNC_API.Controllers
         }
 
         [HttpPost]
-        [Route("CreateUsers")]
+        [Route("CreateUser")]
         public async Task<ActionResult> CreateUser(UserRequestDTO user)
         {
             if (user != null)
@@ -81,7 +81,7 @@ namespace TNC_API.Controllers
         }
 
         [HttpPatch]
-        [Route("UpdateStatus")]
+        [Route("UpdateUserStatus")]
         public async Task<ActionResult> UpdateUserStatus(int Id, int status)
         {
             var user = new UserRequestDTO

@@ -22,12 +22,12 @@ namespace TNC_API.Repositories
         private readonly string _defaultPassword;
         private readonly IMapper _mapper;
 
-        public UserRepository(DatabaseContext context, SecuritySettings securitySettings, IMapper mapper)
+        public UserRepository(DatabaseContext context, IConfiguration configuration, IMapper mapper)
         {
             _context = context;
-            _numberOfSalt = securitySettings.NumberOfSalt;
-            _numberOfIterations = securitySettings.NumberOfIterations;
-            _defaultPassword = securitySettings.DefaultPassword;
+            _numberOfSalt = configuration.GetValue<int>("SecuritySettings:NumberOfSalt");
+            _numberOfIterations = configuration.GetValue<int>("SecuritySettings:NumberOfIterations");
+            _defaultPassword = configuration["SecuritySettings:DefaultPassword"];
             _mapper = mapper;
         }
 

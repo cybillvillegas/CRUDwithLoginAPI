@@ -23,7 +23,6 @@ builder.Services.AddScoped<SecuritySettings>();
 builder.Services.AddScoped<IUser, UserRepository>();
 builder.Services.AddScoped<ILogin, LoginRepository>();
 builder.Services.AddScoped<IPettyCashRequest, PettyCashRequestRepository>();
-builder.Services.Configure<SecuritySettings>(builder.Configuration.GetSection("SecuritySettings"));
 // Add services to the container.
 
 builder.Services.AddDbContext<DatabaseContext>(options =>
