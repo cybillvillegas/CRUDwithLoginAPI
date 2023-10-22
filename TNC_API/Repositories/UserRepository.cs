@@ -102,8 +102,9 @@ namespace TNC_API.Repositories
                     return null;
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 return null;
             }
         }
@@ -113,7 +114,7 @@ namespace TNC_API.Repositories
             var users = await _context.Users.ToListAsync();
             var usersList = new List<UserResponseDTO>();
 
-            if (users == null)
+            if (users == null || users.Count == 0)
             {
                 return null;
             }
@@ -132,23 +133,11 @@ namespace TNC_API.Repositories
         {
             try
             {
-                var user = new User { Id = userId };
+                var user = await _context.Users.FindAsync(userId);
 
-                if (user != null)
+                if (user != null && userUpdate != null)
                 {
-                    if (!(string.IsNullOrWhiteSpace(userUpdate.Password) || string.IsNullOrWhiteSpace(userUpdate.ConfirmPassword)) 
-                        && (userUpdate.Password == userUpdate.ConfirmPassword))
-                    {
-                        UpdatePassword(user, userUpdate.Password);
-                    }
-                    else if (!string.IsNullOrWhiteSpace(userUpdate.Status.ToString()))
-                    {
-                        user.Status = userUpdate.Status;
-                    } 
-                    else
-                    {
-                        _mapper.Map(user, userUpdate);
-                    }
+                    _mapper.Map(userUpdate, user);
 
                     _context.Users.Update(user);
                     await _context.SaveChangesAsync();
@@ -158,6 +147,7 @@ namespace TNC_API.Repositories
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.InnerException.Message);
                 return false;
             }
         }

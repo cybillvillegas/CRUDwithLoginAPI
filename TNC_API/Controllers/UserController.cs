@@ -80,26 +80,26 @@ namespace TNC_API.Controllers
             }
         }
 
-        [HttpPatch]
-        [Route("UpdateUserStatus")]
-        public async Task<ActionResult> UpdateUserStatus(int Id, int status)
-        {
-            var user = new UserRequestDTO
-            {
-                Status = status
-            };
+        //[HttpPatch]
+        //[Route("UpdateUserStatus")]
+        //public async Task<ActionResult> UpdateUserStatus(int Id, int status)
+        //{
+        //    var user = new UserRequestDTO
+        //    {
+        //        Status = status
+        //    };
 
-            var result = await _user.UpdateUser(Id, user);
+        //    var result = await _user.UpdateUser(Id, user);
 
-            if (result)
-            {
-                return Ok(); // User update was successful
-            }
-            else
-            {
-                return BadRequest(); // User update failed
-            }
-        }
+        //    if (result)
+        //    {
+        //        return Ok(); // User update was successful
+        //    }
+        //    else
+        //    {
+        //        return BadRequest(); // User update failed
+        //    }
+        //}
 
         [HttpDelete]
         [Route("DeleteUser")]

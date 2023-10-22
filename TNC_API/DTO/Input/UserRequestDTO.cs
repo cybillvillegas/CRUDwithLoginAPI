@@ -9,9 +9,6 @@
         public string Email { get; set; } = string.Empty;
         public string Contact { get; set; } = string.Empty;
         public string Username { get; set; } = string.Empty;
-        public int UserRole { get; set; }
-        public string Password { get; set; } = string.Empty;
-        public string ConfirmPassword { get; set; } = string.Empty;
-        public int Status { get; set; }
+        public string UserRole { get; set; } = string.Empty;
     }
 }

@@ -1,3 +1,4 @@
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.Security;
@@ -7,6 +8,7 @@ using TNC_API.Models;
 using TNC_API.Repositories;
 using AutoMapper;
 using TNC_API.Profiles;
+using TNC_API.DTO.Input;
 
 var mapperConfig = new MapperConfiguration(cfg =>
 {
@@ -14,6 +16,11 @@ var mapperConfig = new MapperConfiguration(cfg =>
 });
 
 var mapper = new Mapper(mapperConfig);
+
+var config = new MapperConfiguration(cfg => {
+    cfg.CreateMap<UserRequestDTO, User>()
+        .ForMember(dest => dest.Created, opt => opt.Ignore());
+});
 
 var builder = WebApplication.CreateBuilder(args);
 
